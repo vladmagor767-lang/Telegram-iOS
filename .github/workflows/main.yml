@@ -1,4 +1,10 @@
-﻿jobs:
+name: OwpenGram iOS CI
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
   build:
     runs-on: macos-26
 
