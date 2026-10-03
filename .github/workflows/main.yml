@@ -20,6 +20,9 @@ jobs:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
+          echo "API_ID length: ${#API_ID}"
+          echo "API_HASH length: ${#API_HASH}"
+
           python3 - <<'PY'
           import json
           import os
