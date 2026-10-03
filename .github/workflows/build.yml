@@ -1,5 +1,4 @@
-```yaml
-name: OwpenGram iOS Build
+﻿name: OwpenGram iOS Build
 
 on:
   workflow_dispatch:
@@ -45,17 +44,13 @@ jobs:
               "sg_config": ""
           }
 
-          with open(
-              "build-system/owpengram_ci_configuration.json",
-              "w"
-          ) as f:
+          with open("build-system/owpengram_ci_configuration.json", "w") as f:
               json.dump(config, f, indent=4)
           PY
 
       - name: Create canonical source directory
         run: |
           set -eux
-
           SOURCE_DIR="/Users/Shared/telegram-ios"
 
           sudo rm -rf "$SOURCE_DIR"
@@ -80,14 +75,6 @@ jobs:
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
 
-          echo "========================================"
-          echo "Xcode:"
-          xcodebuild -version
-          echo "========================================"
-          echo "App version: $APP_VERSION"
-          echo "Build number: $BUILD_NUMBER"
-          echo "========================================"
-
           python3 build-system/Make/ImportCertificates.py \
             --path build-system/fake-codesigning/certs
 
@@ -100,7 +87,6 @@ jobs:
             --buildNumber="$BUILD_NUMBER"
 
           OUTPUT_PATH="$SOURCE_DIR/build/artifacts"
-
           rm -rf "$OUTPUT_PATH"
           mkdir -p "$OUTPUT_PATH"
 
@@ -123,16 +109,7 @@ jobs:
             -exec cp -R {} "$SOURCE_DIR/build/DSYMs/" \;
 
           cd "$SOURCE_DIR/build"
-
-          zip -r \
-            "$OUTPUT_PATH/Telegram.DSYMs.zip" \
-            DSYMs >/dev/null
-
-          echo "========================================"
-          echo "BUILD SUCCESS"
-          echo "========================================"
-          ls -lh "$OUTPUT_PATH/Telegram.ipa"
-          ls -lh "$OUTPUT_PATH/Telegram.DSYMs.zip"
+          zip -r "$OUTPUT_PATH/Telegram.DSYMs.zip" DSYMs >/dev/null
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -147,4 +124,3 @@ jobs:
           name: OwpenGram-Swiftgram-DSYMs
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
-```
