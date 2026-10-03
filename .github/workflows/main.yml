@@ -31,10 +31,10 @@ jobs:
           import os
 
           config = {
-              "bundle_id": "org.vladmagor767.Swiftgram",
+              "bundle_id": "ph.telegra.Telegraph",
               "api_id": os.environ["API_ID"],
               "api_hash": os.environ["API_HASH"],
-              "team_id": "",
+              "team_id": "C67CF9S4VU",
               "app_center_id": "0",
               "is_internal_build": "true",
               "is_appstore_build": "false",
@@ -152,4 +152,3 @@ jobs:
           name: OwpenGram-Swiftgram-DSYMs
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
-
