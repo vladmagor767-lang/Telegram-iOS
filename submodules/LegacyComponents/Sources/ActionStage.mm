@@ -249,7 +249,7 @@ ActionStage *ActionStageInstance()
 #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 180500
 #pragma clang diagnostic ignored "-Wvla-cxx-extension"
 #endif
-    unichar newPath[path.length];
+    std::vector<unichar> newPath(path.length);
 #pragma clang diagnostic pop
     int newLength = 0;
     
