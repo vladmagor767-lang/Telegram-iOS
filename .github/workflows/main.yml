@@ -1,5 +1,4 @@
-﻿```yaml
-jobs:
+﻿jobs:
   build:
     runs-on: macos-26
 
@@ -147,5 +146,4 @@ jobs:
           name: OwpenGram-Swiftgram-DSYMs
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
-```
 
