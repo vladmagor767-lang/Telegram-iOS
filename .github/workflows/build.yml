@@ -318,3 +318,5 @@ jobs:
           name: OwpenGram-Swiftgram-DSYMs
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
+
+# secret-check-temp
