@@ -1,4 +1,4 @@
-```yaml
+﻿```yaml
 jobs:
   build:
     runs-on: macos-26
@@ -20,8 +20,6 @@ jobs:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
-          echo "API_ID length: ${#API_ID}"
-          echo "API_HASH length: ${#API_HASH}"
 
           python3 - <<'PY'
           import json
@@ -150,3 +148,4 @@ jobs:
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
 ```
+
