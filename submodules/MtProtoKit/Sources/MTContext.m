@@ -248,6 +248,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         _isTestingEnvironment = isTestingEnvironment;
         _useTempAuthKeys = useTempAuthKeys;
         _forceLocalDNS = forceLocalDNS;
+        _isOwpenGram = false;
         
         _tempKeyExpiration = 24 * 60 * 60;
         
@@ -599,6 +600,13 @@ static void copyKeychainDictionaryKey(NSString * _Nonnull group, NSString * _Non
         }
         
         [_keychain setObject:@(_globalTimeDifference) forKey:@"globalTimeDifference" group:@"temp"];
+    }];
+}
+
+- (void)setIsOwpenGram:(bool)isOwpenGram
+{
+    [[MTContext contextQueue] dispatchOnQueue:^{
+        _isOwpenGram = isOwpenGram;
     }];
 }
 

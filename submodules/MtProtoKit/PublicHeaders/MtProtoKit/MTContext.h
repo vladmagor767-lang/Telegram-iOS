@@ -79,6 +79,8 @@
 @property (nonatomic, readonly) bool isTestingEnvironment;
 @property (nonatomic, readonly) bool useTempAuthKeys;
 @property (nonatomic, readonly) bool forceLocalDNS;
+@property (nonatomic, readonly) bool isOwpenGram;
+- (void)setIsOwpenGram:(bool)isOwpenGram;
 @property (nonatomic) int32_t tempKeyExpiration;
 
 @property (nonatomic, copy) id<MTTcpConnectionInterface> _Nonnull (^ _Nullable makeTcpConnectionInterface)(id<MTTcpConnectionInterfaceDelegate> _Nonnull delegate, dispatch_queue_t _Nonnull delegateQueue);
