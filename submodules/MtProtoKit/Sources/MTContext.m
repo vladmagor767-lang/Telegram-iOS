@@ -605,7 +605,7 @@ static void copyKeychainDictionaryKey(NSString * _Nonnull group, NSString * _Non
 
 - (void)setIsOwpenGram:(bool)isOwpenGram
 {
-    [[MTContext contextQueue] dispatchOnQueue:^{
+    [[MTContext contextQueue] dispatchSyncOnQueue:^{
         _isOwpenGram = isOwpenGram;
     }];
 }
