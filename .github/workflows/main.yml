@@ -1,4 +1,4 @@
-name: OwpenGram iOS CI
+﻿name: OwpenGram iOS CI
 on:
   push:
     branches: [master]
@@ -100,43 +100,18 @@ jobs:
             --configurationPath="build-system/owpengram_ci_configuration.json" \
             --codesigningInformationPath=build-system/fake-codesigning \
             --configuration=release_arm64 \
-            --buildNumber="$BUILD_NUMBER"
+            --buildNumber="$BUILD_NUMBER" \
+            --outputBuildArtifactsPath="$SOURCE_DIR/build/artifacts"
 
-          OUTPUT_PATH="$SOURCE_DIR/build/artifacts"
-
-          rm -rf "$OUTPUT_PATH"
-          mkdir -p "$OUTPUT_PATH"
-
-          find bazel-out \
-            -type f \
-            -path "*/bin/Telegram/Telegram.ipa" \
-            -exec cp {} "$OUTPUT_PATH/Telegram.ipa" \;
-
-          if [ ! -f "$OUTPUT_PATH/Telegram.ipa" ]; then
-            echo "ERROR: IPA not found"
-            find bazel-out -type f -name "*.ipa" -print || true
-            exit 1
-          fi
-
-          mkdir -p build/DSYMs
-
-          find bazel-out \
-            -type d \
-            -name "*.dSYM" \
-            -exec cp -R {} build/DSYMs/ \;
-
-          cd build
-
-          zip -r \
-            "$OUTPUT_PATH/Telegram.DSYMs.zip" \
-            DSYMs >/dev/null
+          cp "$SOURCE_DIR/build/artifacts/Swiftgram.ipa" "$SOURCE_DIR/build/artifacts/Telegram.ipa"
+          cp "$SOURCE_DIR/build/artifacts/Swiftgram.DSYMs.zip" "$SOURCE_DIR/build/artifacts/Telegram.DSYMs.zip"
 
           echo "========================================"
           echo "Build completed"
           echo "IPA:"
-          ls -lh "$OUTPUT_PATH/Telegram.ipa"
+          ls -lh "$SOURCE_DIR/build/artifacts/Telegram.ipa"
           echo "DSYMs:"
-          ls -lh "$OUTPUT_PATH/Telegram.DSYMs.zip"
+          ls -lh "$SOURCE_DIR/build/artifacts/Telegram.DSYMs.zip"
           echo "========================================"
 
       - name: Upload IPA artifact
@@ -152,3 +127,6 @@ jobs:
           name: OwpenGram-Swiftgram-DSYMs
           path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
           if-no-files-found: error
+
+
+
