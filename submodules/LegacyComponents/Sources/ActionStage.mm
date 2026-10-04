@@ -281,7 +281,7 @@ ActionStage *ActionStageInstance()
     if (!skippedCharacters)
         return path;
     
-    NSString *genericPath = [[NSString alloc] initWithCharacters:newPath length:newLength];
+    NSString *genericPath = [[NSString alloc] initWithCharacters:newPath.data() length:newLength];
     return genericPath;
 }
 
