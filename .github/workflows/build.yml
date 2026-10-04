@@ -185,6 +185,7 @@ jobs:
 
               entitlements["application-identifier"] = new_app_id
               entitlements["com.apple.developer.team-identifier"] = TEAM_ID
+              entitlements["com.apple.security.application-groups"] = ["group." + BUNDLE_ID]
 
               profile["Entitlements"] = entitlements
               profile["ExpirationDate"] = datetime.datetime(
