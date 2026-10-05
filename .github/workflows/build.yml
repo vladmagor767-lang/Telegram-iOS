@@ -1,4 +1,4 @@
-﻿name: OwpenGram iOS Build
+name: OwpenGram iOS Build
 
 on:
   workflow_dispatch:
@@ -224,6 +224,29 @@ jobs:
           print("CI provisioning profiles generated successfully.")
           PY
 
+          echo "=== VERIFY-OWPENGRAM-APP-GROUP ==="
+          PROFILE_OK=0
+          for PROFILE in "$CI_CODESIGNING/profiles/"*.mobileprovision; do
+            [ -f "$PROFILE" ] || continue
+            echo "--- $PROFILE ---"
+            security cms -D -i "$PROFILE" > /tmp/profile.plist
+            if grep -q "group.org.vladmagor767.Swiftgram" /tmp/profile.plist && \
+               ! grep -q "group.ph.telegra.Telegraph" /tmp/profile.plist; then
+              echo "App Group OK"
+              PROFILE_OK=1
+            else
+              echo "ERROR: wrong App Group in $PROFILE"
+              grep -A3 -B3 "application-groups" /tmp/profile.plist || true
+              exit 1
+            fi
+          done
+
+          if [ "$PROFILE_OK" -ne 1 ]; then
+            echo "ERROR: no valid provisioning profile found"
+            exit 1
+          fi
+
+          echo "=== App Group verification PASSED ==="
           echo "=== Generated profiles ==="
           ls -la "$CI_CODESIGNING/profiles"
 
