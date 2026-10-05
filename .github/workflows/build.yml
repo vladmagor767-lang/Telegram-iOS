@@ -247,6 +247,19 @@ jobs:
           fi
 
           echo "=== App Group verification PASSED ==="
+          echo "=== VERIFY-CI-PROFILES ==="
+          for PROFILE in "$CI_CODESIGNING/profiles/"*.mobileprovision; do
+            [ -f "$PROFILE" ] || continue
+            echo "--- $PROFILE ---"
+            security cms -D -i "$PROFILE" > /tmp/profile.plist
+            echo "application-identifier:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/profile.plist || true
+            echo "aps-environment:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:aps-environment" /tmp/profile.plist || true
+            echo "application-groups:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist || true
+          done
+          echo "=== VERIFY-CI-PROFILES END ==="
           echo "=== Generated profiles ==="
           ls -la "$CI_CODESIGNING/profiles"
 
