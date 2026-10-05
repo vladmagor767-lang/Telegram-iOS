@@ -1,4 +1,4 @@
-﻿name: OwpenGram iOS CI
+name: OwpenGram iOS CI
 on:
   push:
     branches: [master]
@@ -31,7 +31,7 @@ jobs:
           import os
 
           config = {
-              "bundle_id": "ph.telegra.Telegraph",
+              "bundle_id": "org.vladmagor767.Swiftgram",
               "api_id": os.environ["API_ID"],
               "api_hash": os.environ["API_HASH"],
               "team_id": "C67CF9S4VU",
