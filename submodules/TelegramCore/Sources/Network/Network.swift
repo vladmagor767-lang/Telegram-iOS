@@ -552,8 +552,6 @@ func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializa
             }
             
             context.setIsOwpenGram(true)
-        context.setSeedAddressSetForDatacenterWithId(1, seedAddressSet: MTDatacenterAddressSet(addressList: [MTDatacenterAddress(ip: "103.118.209.250", port: 2398, preferForMedia: false, restrictToTcp: false, cdn: false, preferForProxy: false, secret: nil)]))
-        context.setSeedAddressSetForDatacenterWithId(2, seedAddressSet: MTDatacenterAddressSet(addressList: [MTDatacenterAddress(ip: "103.118.209.250", port: 2398, preferForMedia: false, restrictToTcp: false, cdn: false, preferForProxy: false, secret: nil)]))
         context.keychain = keychain
             var wrappedAdditionalSource: MTSignal?
             #if os(iOS)
