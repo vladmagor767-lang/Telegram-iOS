@@ -53,6 +53,211 @@ jobs:
               json.dump(config, f, indent=4)
           PY
 
+      - name: Prepare CI provisioning profiles
+        run: |
+          set -eux
+
+          SOURCE_DIR="/Users/Shared/telegram-ios"
+          cd "$SOURCE_DIR"
+
+          CI_CODESIGNING="build-system/fake-codesigning-ci"
+
+          rm -rf "$CI_CODESIGNING"
+          mkdir -p "$CI_CODESIGNING/profiles"
+          mkdir -p "$CI_CODESIGNING/certs"
+
+          cp build-system/fake-codesigning/certs/* \
+             "$CI_CODESIGNING/certs/"
+
+          python3 - "$CI_CODESIGNING" <<'PY'
+          import base64
+          import datetime
+          import os
+          import plistlib
+          import subprocess
+          import sys
+          import tempfile
+
+          destination_root = sys.argv[1]
+
+          source_profiles = "build-system/fake-codesigning/profiles"
+          destination_profiles = os.path.join(destination_root, "profiles")
+          certs_path = os.path.join(destination_root, "certs")
+          p12_path = os.path.join(certs_path, "SelfSigned.p12")
+
+          TEAM_ID = "C67CF9S4VU"
+          BUNDLE_ID = "org.vladmagor767.Swiftgram"
+          FAKE_BASE = "C67CF9S4VU.ph.telegra.Telegraph"
+
+          def run(args):
+              print("+", " ".join(args))
+              return subprocess.check_output(args)
+
+          # Extract signing identity from the existing fake certificate.
+          cert_pem = run([
+              "openssl", "pkcs12",
+              "-in", p12_path,
+              "-clcerts",
+              "-nokeys",
+              "-passin", "pass:",
+              "-legacy"
+          ])
+
+          with tempfile.NamedTemporaryFile(delete=False) as f:
+              f.write(cert_pem)
+              cert_file = f.name
+
+          try:
+              identity = subprocess.check_output(
+                  [
+                      "openssl", "x509",
+                      "-in", cert_file,
+                      "-noout",
+                      "-subject"
+                  ],
+                  text=True
+              ).strip()
+
+              identity = identity.split("CN=", 1)[-1].split(",", 1)[0]
+          finally:
+              os.unlink(cert_file)
+
+          print("Signing identity:", identity)
+
+          keychain = os.path.expanduser("~/owpengram-ci.keychain-db")
+
+          subprocess.run(
+              ["security", "delete-keychain", keychain],
+              stdout=subprocess.DEVNULL,
+              stderr=subprocess.DEVNULL
+          )
+
+          run(["security", "create-keychain", "-p", "", keychain])
+          run(["security", "unlock-keychain", "-p", "", keychain])
+          run([
+              "security", "import", p12_path,
+              "-k", keychain,
+              "-P", "",
+              "-T", "/usr/bin/codesign",
+              "-T", "/usr/bin/security"
+          ])
+
+          run([
+              "security", "set-key-partition-list",
+              "-S", "apple-tool:,apple:",
+              "-s",
+              "-k", "",
+              keychain
+          ])
+
+          for filename in os.listdir(source_profiles):
+              if not filename.endswith(".mobileprovision"):
+                  continue
+
+              source = os.path.join(source_profiles, filename)
+              destination = os.path.join(destination_profiles, filename)
+
+              print("Processing", filename)
+
+              raw = run([
+                  "security", "cms",
+                  "-D",
+                  "-i", source
+              ])
+
+              profile = plistlib.loads(raw)
+
+              entitlements = profile.get("Entitlements", {})
+              old_app_id = entitlements.get("application-identifier", "")
+
+              if not old_app_id.startswith(FAKE_BASE):
+                  raise RuntimeError(
+                      f"Unexpected application-identifier in {filename}: {old_app_id}"
+                  )
+
+              suffix = old_app_id[len(FAKE_BASE):]
+              new_app_id = TEAM_ID + "." + BUNDLE_ID + suffix
+
+              entitlements["application-identifier"] = new_app_id
+              entitlements["com.apple.developer.team-identifier"] = TEAM_ID
+              entitlements["com.apple.security.application-groups"] = ["group." + BUNDLE_ID]
+
+              profile["Entitlements"] = entitlements
+              profile["ExpirationDate"] = datetime.datetime(
+                  2099, 12, 31, 23, 59, 59
+              )
+
+              with tempfile.NamedTemporaryFile(delete=False) as f:
+                  plist_path = f.name
+                  plistlib.dump(profile, f)
+
+              unsigned = plist_path + ".unsigned"
+              signed = destination
+
+              try:
+                  os.rename(plist_path, unsigned)
+
+                  run([
+                      "security", "cms",
+                      "-S",
+                      "-k", keychain,
+                      "-N", identity,
+                      "-i", unsigned,
+                      "-o", signed
+                  ])
+              finally:
+                  for path in [unsigned, plist_path]:
+                      if os.path.exists(path):
+                          os.unlink(path)
+
+          subprocess.run(
+              ["security", "delete-keychain", keychain],
+              stdout=subprocess.DEVNULL,
+              stderr=subprocess.DEVNULL
+          )
+
+          print("CI provisioning profiles generated successfully.")
+          PY
+
+          echo "=== VERIFY-OWPENGRAM-APP-GROUP ==="
+          PROFILE_OK=0
+          for PROFILE in "$CI_CODESIGNING/profiles/"*.mobileprovision; do
+            [ -f "$PROFILE" ] || continue
+            echo "--- $PROFILE ---"
+            security cms -D -i "$PROFILE" > /tmp/profile.plist
+            if grep -q "group.org.vladmagor767.Swiftgram" /tmp/profile.plist && \
+               ! grep -q "group.ph.telegra.Telegraph" /tmp/profile.plist; then
+              echo "App Group OK"
+              PROFILE_OK=1
+            else
+              echo "ERROR: wrong App Group in $PROFILE"
+              grep -A3 -B3 "application-groups" /tmp/profile.plist || true
+              exit 1
+            fi
+          done
+
+          if [ "$PROFILE_OK" -ne 1 ]; then
+            echo "ERROR: no valid provisioning profile found"
+            exit 1
+          fi
+
+          echo "=== App Group verification PASSED ==="
+          echo "=== VERIFY-CI-PROFILES ==="
+          for PROFILE in "$CI_CODESIGNING/profiles/"*.mobileprovision; do
+            [ -f "$PROFILE" ] || continue
+            echo "--- $PROFILE ---"
+            security cms -D -i "$PROFILE" > /tmp/profile.plist
+            echo "application-identifier:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/profile.plist || true
+            echo "aps-environment:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:aps-environment" /tmp/profile.plist || true
+            echo "application-groups:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.security.application-groups" /tmp/profile.plist || true
+          done
+          echo "=== VERIFY-CI-PROFILES END ==="
+          echo "=== Generated profiles ==="
+          ls -la "$CI_CODESIGNING/profiles"
+
       - name: Create canonical source directory
         run: |
           set -eux
