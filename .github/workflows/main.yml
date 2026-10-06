@@ -53,6 +53,19 @@ jobs:
               json.dump(config, f, indent=4)
           PY
 
+      - name: Create canonical source directory
+        run: |
+          set -eux
+
+          SOURCE_DIR="/Users/Shared/telegram-ios"
+
+          sudo rm -rf "$SOURCE_DIR"
+          sudo mkdir -p /Users/Shared
+
+          sudo cp -R "$GITHUB_WORKSPACE" "$SOURCE_DIR"
+
+          sudo chown -R "$(whoami):$(id -g)" "$SOURCE_DIR"
+
       - name: Prepare CI provisioning profiles
         run: |
           set -eux
@@ -257,19 +270,6 @@ jobs:
           echo "=== VERIFY-CI-PROFILES END ==="
           echo "=== Generated profiles ==="
           ls -la "$CI_CODESIGNING/profiles"
-
-      - name: Create canonical source directory
-        run: |
-          set -eux
-
-          SOURCE_DIR="/Users/Shared/telegram-ios"
-
-          sudo rm -rf "$SOURCE_DIR"
-          sudo mkdir -p /Users/Shared
-
-          sudo cp -R "$GITHUB_WORKSPACE" "$SOURCE_DIR"
-
-          sudo chown -R "$(whoami):$(id -g)" "$SOURCE_DIR"
 
       - name: Build the App
         run: |
