@@ -98,7 +98,7 @@ jobs:
             --bazelUserRoot="$BAZEL_USER_ROOT" \
             build \
             --configurationPath="build-system/owpengram_ci_configuration.json" \
-            --codesigningInformationPath=build-system/fake-codesigning \
+            --codesigningInformationPath=build-system/fake-codesigning-ci \
             --configuration=release_arm64 \
             --buildNumber="$BUILD_NUMBER" \
             --outputBuildArtifactsPath="$SOURCE_DIR/build/artifacts"
