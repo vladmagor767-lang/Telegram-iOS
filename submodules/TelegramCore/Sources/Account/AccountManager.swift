@@ -21,6 +21,7 @@ public enum TelegramAccountRecordAttribute: AccountRecordAttribute, Equatable {
         case sortOrder
         case loggedOut
         case supportUserInfo
+        case owpenGram
         case legacyRootObject = "_"
     }
 
@@ -29,6 +30,7 @@ public enum TelegramAccountRecordAttribute: AccountRecordAttribute, Equatable {
     case sortOrder(AccountSortOrderAttribute)
     case loggedOut(LoggedOutAccountAttribute)
     case supportUserInfo(AccountSupportUserInfo)
+    case owpenGram
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -43,6 +45,8 @@ public enum TelegramAccountRecordAttribute: AccountRecordAttribute, Equatable {
             self = .loggedOut(loggedOut)
         } else if let supportUserInfo = try? container.decodeIfPresent(AccountSupportUserInfo.self, forKey: .supportUserInfo) {
             self = .supportUserInfo(supportUserInfo)
+        } else if let owpenGram = try? container.decodeIfPresent(Bool.self, forKey: .owpenGram), owpenGram {
+            self = .owpenGram
         } else {
             let legacyRootObjectData = try! container.decode(AdaptedPostboxDecoder.RawObjectData.self, forKey: .legacyRootObject)
             if legacyRootObjectData.typeHash == postboxEncodableTypeHash(AccountBackupDataAttribute.self) {
@@ -73,6 +77,8 @@ public enum TelegramAccountRecordAttribute: AccountRecordAttribute, Equatable {
             try container.encode(loggedOut, forKey: .loggedOut)
         case let .supportUserInfo(supportUserInfo):
             try container.encode(supportUserInfo, forKey: .supportUserInfo)
+        case .owpenGram:
+            try container.encode(true, forKey: .owpenGram)
         }
     }
 
@@ -318,7 +324,14 @@ public func currentAccount(allocateIfNotExists: Bool, networkArguments: NetworkI
                         return false
                     }
                 })
-                return accountWithId(accountManager: manager, networkArguments: networkArguments, id: record.0, encryptionParameters: encryptionParameters, supplementary: supplementary, isSupportUser: isSupportUser, rootPath: rootPath, beginWithTestingEnvironment: beginWithTestingEnvironment, backupData: nil, auxiliaryMethods: auxiliaryMethods)
+                let isOwpenGram = record.1.contains(where: { attribute in
+                    if case .owpenGram = attribute {
+                        return true
+                    } else {
+                        return false
+                    }
+                })
+                return accountWithId(accountManager: manager, networkArguments: networkArguments, id: record.0, encryptionParameters: encryptionParameters, supplementary: supplementary, isSupportUser: isSupportUser, isOwpenGram: isOwpenGram, rootPath: rootPath, beginWithTestingEnvironment: beginWithTestingEnvironment, backupData: nil, auxiliaryMethods: auxiliaryMethods)
                 |> mapToSignal { accountResult -> Signal<AccountResult?, NoError> in
                     let postbox: Postbox
                     let initialKind: AccountKind
@@ -495,7 +508,14 @@ private func cleanupAccount(networkArguments: NetworkInitializationArguments, ac
             return false
         }
     })
-    return accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: true, isSupportUser: isSupportUser, rootPath: rootPath, beginWithTestingEnvironment: beginWithTestingEnvironment, backupData: nil, auxiliaryMethods: auxiliaryMethods)
+    let isOwpenGram = attributes.contains(where: { attribute in
+        if case .owpenGram = attribute {
+            return true
+        } else {
+            return false
+        }
+    })
+    return accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: true, isSupportUser: isSupportUser, isOwpenGram: isOwpenGram, rootPath: rootPath, beginWithTestingEnvironment: beginWithTestingEnvironment, backupData: nil, auxiliaryMethods: auxiliaryMethods)
     |> mapToSignal { account -> Signal<Void, NoError> in
         switch account {
             case .upgrading:

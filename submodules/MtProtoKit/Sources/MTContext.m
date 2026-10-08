@@ -967,11 +967,15 @@ static void copyKeychainDictionaryKey(NSString * _Nonnull group, NSString * _Non
     __block MTDatacenterAddressSet *result = nil;
     [[MTContext contextQueue] dispatchOnQueue:^
     {
-        MTDatacenterAddressSet *addressSet = _datacenterAddressSetById[@(datacenterId)];
-        if (addressSet != nil && addressSet.addressList.count != 0) {
-            result = _datacenterAddressSetById[@(datacenterId)];
-        } else {
+        if (_isOwpenGram) {
             result = _datacenterSeedAddressSetById[@(datacenterId)];
+        } else {
+            MTDatacenterAddressSet *addressSet = _datacenterAddressSetById[@(datacenterId)];
+            if (addressSet != nil && addressSet.addressList.count != 0) {
+                result = _datacenterAddressSetById[@(datacenterId)];
+            } else {
+                result = _datacenterSeedAddressSetById[@(datacenterId)];
+            }
         }
     } synchronous:true];
     

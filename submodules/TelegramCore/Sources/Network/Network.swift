@@ -466,7 +466,7 @@ public struct NetworkInitializationArguments {
 private let cloudDataContext = Atomic<CloudDataContext?>(value: nil)
 #endif
 
-func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializationArguments, supplementary: Bool, datacenterId: Int, keychain: Keychain, basePath: String, testingEnvironment: Bool, languageCode: String?, proxySettings: ProxySettings?, networkSettings: NetworkSettings?, phoneNumber: String?, useRequestTimeoutTimers: Bool, appConfiguration: AppConfiguration) -> Signal<Network, NoError> {
+func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializationArguments, supplementary: Bool, datacenterId: Int, keychain: Keychain, basePath: String, testingEnvironment: Bool, isOwpenGram: Bool, languageCode: String?, proxySettings: ProxySettings?, networkSettings: NetworkSettings?, phoneNumber: String?, useRequestTimeoutTimers: Bool, appConfiguration: AppConfiguration) -> Signal<Network, NoError> {
     return Signal { subscriber in
         let queue = Queue()
         queue.async {
@@ -530,13 +530,24 @@ func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializa
             }
             
             let seedAddressList: [Int: [String]]
+            let seedPort: UInt16
             
-            if testingEnvironment {
+            if isOwpenGram {
+                seedAddressList = [
+                    1: ["103.118.209.250"],
+                    2: ["103.118.209.250"],
+                    3: ["103.118.209.250"],
+                    4: ["103.118.209.250"],
+                    5: ["103.118.209.250"]
+                ]
+                seedPort = 2398
+            } else if testingEnvironment {
                 seedAddressList = [
                     1: ["149.154.175.10"],
                     2: ["149.154.167.40"],
                     3: ["149.154.175.117"]
                 ]
+                seedPort = 443
             } else {
                 seedAddressList = [
                     1: ["149.154.175.50", "2001:b28:f23d:f001::a"],
@@ -545,14 +556,15 @@ func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializa
                     4: ["149.154.167.91", "2001:67c:4e8:f004::a"],
                     5: ["149.154.171.5", "2001:b28:f23f:f005::a"]
                 ]
+                seedPort = 443
             }
             
             for (id, ips) in seedAddressList {
-                context.setSeedAddressSetForDatacenterWithId(id, seedAddressSet: MTDatacenterAddressSet(addressList: ips.map { MTDatacenterAddress(ip: $0, port: 443, preferForMedia: false, restrictToTcp: false, cdn: false, preferForProxy: false, secret: nil) }))
+                context.setSeedAddressSetForDatacenterWithId(id, seedAddressSet: MTDatacenterAddressSet(addressList: ips.map { MTDatacenterAddress(ip: $0, port: seedPort, preferForMedia: false, restrictToTcp: false, cdn: false, preferForProxy: false, secret: nil) }))
             }
             
-            context.setIsOwpenGram(true)
-        context.keychain = keychain
+            context.setIsOwpenGram(isOwpenGram)
+            context.keychain = keychain
             var wrappedAdditionalSource: MTSignal?
             #if os(iOS)
             if #available(iOS 10.0, *), !supplementary, arguments.isICloudEnabled {

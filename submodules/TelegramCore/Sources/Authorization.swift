@@ -1631,6 +1631,7 @@ public func test_loginAndDeleteAccount(
             encryptionParameters: encryptionParameters,
             supplementary: false,
             isSupportUser: false,
+            isOwpenGram: false,
             rootPath: rootPath,
             beginWithTestingEnvironment: true,
             backupData: nil,
