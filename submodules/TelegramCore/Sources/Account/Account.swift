@@ -1728,7 +1728,7 @@ public func standaloneStateManager(
 
     let postboxSignal: Signal<PostboxResult, NoError> = postbox |> take(1)
 
-    return postboxSignal
+    let accountStateManagerSignal: Signal<AccountStateManager?, NoError> = postboxSignal
     |> mapToSignal { result -> Signal<AccountStateManager?, NoError> in
         switch result {
         case .upgrading:
@@ -1852,5 +1852,6 @@ public func standaloneStateManager(
             }
         }
     }
+    return accountStateManagerSignal
 }
 
