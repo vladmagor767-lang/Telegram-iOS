@@ -1728,8 +1728,7 @@ public func standaloneStateManager(
 
     let postboxSignal: Signal<PostboxResult, NoError> = postbox |> take(1)
 
-    let accountStateManagerSignal: Signal<AccountStateManager?, NoError> = postboxSignal
-    |> mapToSignal { result -> Signal<AccountStateManager?, NoError> in
+    let accountStateManagerTransform: (PostboxResult) -> Signal<AccountStateManager?, NoError> = { result in
         switch result {
         case .upgrading:
             Logger.shared.log("StandaloneStateManager", "Received postbox: upgrading")
@@ -1852,6 +1851,7 @@ public func standaloneStateManager(
             }
         }
     }
+    let accountStateManagerSignal: Signal<AccountStateManager?, NoError> = postboxSignal |> mapToSignal(accountStateManagerTransform)
     return accountStateManagerSignal
 }
 
