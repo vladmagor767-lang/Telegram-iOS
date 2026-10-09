@@ -1726,8 +1726,9 @@ public func standaloneStateManager(
     
     Logger.shared.log("StandaloneStateManager", "Prepare request postbox")
 
-    return postbox
-    |> take(1)
+    let postboxSignal: Signal<PostboxResult, NoError> = postbox |> take(1)
+
+    return postboxSignal
     |> mapToSignal { result -> Signal<AccountStateManager?, NoError> in
         switch result {
         case .upgrading:

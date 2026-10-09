@@ -19,6 +19,14 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
           xcodebuild -version
 
+      - name: Check API secrets
+        env:
+          API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          echo "API_ID_LENGTH=${#API_ID}"
+          echo "API_HASH_LENGTH=${#API_HASH}"
+
       - name: Create OwpenGram configuration
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
