@@ -1741,19 +1741,22 @@ public func standaloneStateManager(
         case let .postbox(postbox):
             Logger.shared.log("StandaloneStateManager", "Received postbox: valid")
             
-            return accountManager.transaction { transaction -> (LocalizationSettings?, ProxySettings?) in
+            let settingsSignal: Signal<(LocalizationSettings?, ProxySettings?), NoError> = accountManager.transaction { transaction -> (LocalizationSettings?, ProxySettings?) in
                 return (nil, transaction.getSharedData(SharedDataKeys.proxySettings)?.get(ProxySettings.self))
             }
+
+            return settingsSignal
             |> mapToSignal { localizationSettings, proxySettings -> Signal<AccountStateManager?, NoError> in
                 Logger.shared.log("StandaloneStateManager", "Received settings")
                 
-                return postbox.transaction { transaction -> (PostboxCoding?, LocalizationSettings?, ProxySettings?, NetworkSettings?) in
+                let stateSignal: Signal<(PostboxCoding?, LocalizationSettings?, ProxySettings?, NetworkSettings?), NoError> = postbox.transaction { transaction -> (PostboxCoding?, LocalizationSettings?, ProxySettings?, NetworkSettings?) in
                     Logger.shared.log("StandaloneStateManager", "Getting state")
                     
                     let state = transaction.getState()
 
                     return (state, localizationSettings, proxySettings, transaction.getPreferencesEntry(key: PreferencesKeys.networkSettings)?.get(NetworkSettings.self))
                 }
+                return stateSignal
                 |> mapToSignal { accountState, localizationSettings, proxySettings, networkSettings -> Signal<AccountStateManager?, NoError> in
                     Logger.shared.log("StandaloneStateManager", "Received state")
                     
@@ -1768,9 +1771,10 @@ public func standaloneStateManager(
                         case let authorizedState as AuthorizedAccountState:
                             Logger.shared.log("StandaloneStateManager", "state is valid")
                             
-                            return postbox.transaction { transaction -> String? in
+                            let phoneNumberSignal: Signal<String?, NoError> = postbox.transaction { transaction -> String? in
                                 return (transaction.getPeer(authorizedState.peerId) as? TelegramUser)?.phone
                             }
+                            return phoneNumberSignal
                             |> mapToSignal { phoneNumber in
                                 Logger.shared.log("StandaloneStateManager", "received phone number")
                                 
