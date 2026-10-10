@@ -134,6 +134,7 @@ private struct AccountAttributes: Equatable {
     let isTestingEnvironment: Bool
     let backupData: AccountBackupData?
     let isSupportUser: Bool
+    let isOwpenGram: Bool
 }
 
 private enum AddedAccountResult {
@@ -621,6 +622,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 var backupData: AccountBackupData?
                 var sortIndex: Int32 = 0
                 var isSupportUser = false
+                let isOwpenGram = record.attributes.contains(where: { attribute in if case .owpenGram = attribute { return true }; return false })
                 for attribute in record.attributes {
                     if case let .sortOrder(sortOrder) = attribute {
                         sortIndex = sortOrder.order
@@ -630,9 +632,9 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                         isSupportUser = true
                     }
                 }
-                result[record.id] = AccountAttributes(sortIndex: sortIndex, isTestingEnvironment: isTestingEnvironment, backupData: backupData, isSupportUser: isSupportUser)
+                result[record.id] = AccountAttributes(sortIndex: sortIndex, isTestingEnvironment: isTestingEnvironment, backupData: backupData, isSupportUser: isSupportUser, isOwpenGram: isOwpenGram)
             }
-            let authRecord: (AccountRecordId, Bool)? = view.currentAuthAccount.flatMap({ authAccount in
+            let authRecord: (AccountRecordId, Bool, Bool)? = view.currentAuthAccount.flatMap({ authAccount in
                 let isTestingEnvironment = authAccount.attributes.contains(where: { attribute in
                     if case let .environment(environment) = attribute, case .test = environment.environment {
                         return true
@@ -640,7 +642,8 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                         return false
                     }
                 })
-                return (authAccount.id, isTestingEnvironment)
+                let isOwpenGram = authAccount.attributes.contains(where: { attribute in if case .owpenGram = attribute { return true }; return false })
+                return (authAccount.id, isTestingEnvironment, isOwpenGram)
             })
             return (view.currentRecord?.id, result, authRecord)
         }
@@ -664,7 +667,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
             var addedAuthSignal: Signal<UnauthorizedAccount?, NoError> = .single(nil)
             for (id, attributes) in records {
                 if self.activeAccountsValue?.accounts.firstIndex(where: { $0.0 == id}) == nil {
-                    addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: !applicationBindings.isMainApp, isSupportUser: attributes.isSupportUser, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: makeTelegramAccountAuxiliaryMethods(uploadInBackground: appDelegate?.uploadInBackround))
+                    addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: !applicationBindings.isMainApp, isSupportUser: attributes.isSupportUser, isOwpenGram: attributes.isOwpenGram, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: makeTelegramAccountAuxiliaryMethods(uploadInBackground: appDelegate?.uploadInBackround))
                     |> mapToSignal { result -> Signal<AddedAccountResult, NoError> in
                         switch result {
                             case let .authorized(account):
@@ -688,7 +691,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 }
             }
             if let authRecord = authRecord, authRecord.0 != self.activeAccountsValue?.currentAuth?.id {
-                addedAuthSignal = accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: authRecord.0, encryptionParameters: encryptionParameters, supplementary: !applicationBindings.isMainApp, isSupportUser: false, rootPath: rootPath, beginWithTestingEnvironment: authRecord.1, backupData: nil, auxiliaryMethods: makeTelegramAccountAuxiliaryMethods(uploadInBackground: appDelegate?.uploadInBackround))
+                addedAuthSignal = accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: authRecord.0, encryptionParameters: encryptionParameters, supplementary: !applicationBindings.isMainApp, isSupportUser: false, isOwpenGram: authRecord.2, rootPath: rootPath, beginWithTestingEnvironment: authRecord.1, backupData: nil, auxiliaryMethods: makeTelegramAccountAuxiliaryMethods(uploadInBackground: appDelegate?.uploadInBackround))
                 |> mapToSignal { result -> Signal<UnauthorizedAccount?, NoError> in
                     switch result {
                         case let .unauthorized(account):
