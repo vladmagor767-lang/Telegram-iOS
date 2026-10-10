@@ -597,7 +597,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
         
         let differenceDisposable = MetaDisposable()
         let _ = (accountManager.accountRecords()
-        |> map { view -> (AccountRecordId?, [AccountRecordId: AccountAttributes], (AccountRecordId, Bool)?) in
+        |> map { view -> (AccountRecordId?, [AccountRecordId: AccountAttributes], (AccountRecordId, Bool, Bool)?) in
             print("SharedAccountContextImpl: records appeared in \(CFAbsoluteTimeGetCurrent() - startTime)")
             
             var result: [AccountRecordId: AccountAttributes] = [:]
@@ -658,6 +658,9 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 return false
             }
             if lhs.2?.1 != rhs.2?.1 {
+                return false
+            }
+            if lhs.2?.2 != rhs.2?.2 {
                 return false
             }
             return true
