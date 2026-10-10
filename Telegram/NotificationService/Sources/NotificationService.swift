@@ -899,6 +899,7 @@ private final class NotificationServiceHandler {
         |> take(1)
         |> deliverOn(self.queue)).start(next: { [weak self] records, sharedData in
             var recordId: AccountRecordId?
+            var isOwpenGram: Bool = false
             var isCurrentAccount: Bool = false
             
 //            var automaticMediaDownloadSettings: MediaAutoDownloadSettings
@@ -916,6 +917,7 @@ private final class NotificationServiceHandler {
                             if let notificationEncryptionKeyId = backupData.data?.notificationEncryptionKeyId {
                                 if keyId == notificationEncryptionKeyId {
                                     recordId = listRecord.id
+                                    isOwpenGram = listRecord.attributes.contains(where: { attribute in if case .owpenGram = attribute { return true }; return false })
                                     isCurrentAccount = records.currentRecord?.id == listRecord.id
                                     break outer
                                 }
@@ -949,6 +951,7 @@ private final class NotificationServiceHandler {
                 accountManager: strongSelf.accountManager,
                 networkArguments: networkArguments,
                 id: recordId,
+                isOwpenGram: isOwpenGram,
                 encryptionParameters: strongSelf.encryptionParameters,
                 rootPath: rootPath,
                 auxiliaryMethods: accountAuxiliaryMethods

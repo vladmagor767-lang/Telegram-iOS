@@ -442,6 +442,7 @@ public class ShareRootControllerImpl {
                         accountManager: accountManager,
                         networkArguments: networkArguments,
                         id: record.id,
+                        isOwpenGram: record.attributes.contains(where: { attribute in if case .owpenGram = attribute { return true }; return false }),
                         encryptionParameters: ValueBoxEncryptionParameters(
                             forceEncryptionIfNoSet: false,
                             key: ValueBoxEncryptionParameters.Key(data: initializationData.encryptionParameters.0)!,

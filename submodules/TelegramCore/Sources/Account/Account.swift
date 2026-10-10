@@ -1705,6 +1705,7 @@ public func standaloneStateManager(
     accountManager: AccountManager<TelegramAccountManagerTypes>,
     networkArguments: NetworkInitializationArguments,
     id: AccountRecordId,
+    isOwpenGram: Bool,
     encryptionParameters: ValueBoxEncryptionParameters,
     rootPath: String,
     auxiliaryMethods: AccountAuxiliaryMethods
@@ -1789,7 +1790,7 @@ public func standaloneStateManager(
                                     keychain: keychain,
                                     basePath: path,
                                     testingEnvironment: authorizedState.isTestingEnvironment,
-                                    isOwpenGram: authorizedState.isOwpenGram,
+                                    isOwpenGram: isOwpenGram,
                                     languageCode: localizationSettings?.primaryComponent.languageCode,
                                     proxySettings: proxySettings,
                                     networkSettings: networkSettings,
